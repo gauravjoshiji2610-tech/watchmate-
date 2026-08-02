@@ -26,6 +26,12 @@ importers:
 
   apps/server:
     dependencies:
+      '@antigravity/shared-schemas':
+        specifier: workspace:*
+        version: link:../../packages/shared-schemas
+      '@antigravity/shared-types':
+        specifier: workspace:*
+        version: link:../../packages/shared-types
       cors:
         specifier: ^2.8.5
         version: 2.8.6

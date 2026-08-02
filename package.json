@@ -9,7 +9,9 @@
   },
   "scripts": {
     "build": "pnpm -r build",
+    "build:packages": "pnpm --filter \"./packages/**\" build",
     "dev": "pnpm -r --parallel dev",
+    "dev:server": "pnpm run build:packages && pnpm --filter @antigravity/server dev",
     "clean": "pnpm -r clean && node scripts/clean.mjs",
     "lint": "pnpm -r lint",
     "typecheck": "pnpm -r typecheck",
