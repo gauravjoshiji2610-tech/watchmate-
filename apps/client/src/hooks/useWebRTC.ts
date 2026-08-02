@@ -11,6 +11,7 @@ import { logger } from '../lib/logger.js';
 export function useWebRTC(roomId?: string, isHost = false) {
   const [connectionState, setConnectionState] = useState<WebRTCConnectionState>('new');
   const [peerUserToken, setPeerUserToken] = useState<string | null>(null);
+  const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
 
   const pcManagerRef = useRef<PeerConnectionManager | null>(null);
   const signalingRef = useRef<SignalingService | null>(null);
@@ -24,7 +25,20 @@ export function useWebRTC(roomId?: string, isHost = false) {
     signalingRef.current = null;
     setConnectionState('closed');
     setPeerUserToken(null);
+    setRemoteStream(null);
     logger.info('WebRTC hook cleaned up');
+  }, []);
+
+  const addLocalStream = useCallback((stream: MediaStream) => {
+    if (pcManagerRef.current) {
+      pcManagerRef.current.addStream(stream);
+    }
+  }, []);
+
+  const removeLocalStream = useCallback(() => {
+    if (pcManagerRef.current) {
+      pcManagerRef.current.removeStream();
+    }
   }, []);
 
   const connectSignaling = useCallback(
@@ -50,6 +64,10 @@ export function useWebRTC(roomId?: string, isHost = false) {
           if (peerUserToken) {
             signaling.sendIceCandidate(peerUserToken, candidate.toJSON());
           }
+        },
+        onTrack: (stream) => {
+          setRemoteStream(stream);
+          toast.info('Received remote video stream');
         },
       });
 
@@ -130,6 +148,9 @@ export function useWebRTC(roomId?: string, isHost = false) {
     connectionState,
     isConnected: connectionState === 'connected',
     peerUserToken,
+    remoteStream,
+    addLocalStream,
+    removeLocalStream,
     connectSignaling,
     startNegotiation,
     disconnectWebRTC,

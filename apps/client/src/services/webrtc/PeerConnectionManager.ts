@@ -7,6 +7,7 @@ import {
 export interface PeerConnectionCallbacks {
   onStateChange: (state: WebRTCConnectionState) => void;
   onIceCandidate: (candidate: RTCIceCandidate) => void;
+  onTrack?: (stream: MediaStream) => void;
 }
 
 const DEFAULT_RTC_CONFIG: RTCConfiguration = {
@@ -30,6 +31,25 @@ export class PeerConnectionManager {
 
     this.setupListeners();
     logger.info('RTCPeerConnection initialized');
+  }
+
+  addStream(stream: MediaStream): void {
+    if (!this.pc) return;
+    for (const track of stream.getTracks()) {
+      this.pc.addTrack(track, stream);
+      logger.info('Added local track to RTCPeerConnection', { kind: track.kind, id: track.id });
+    }
+  }
+
+  removeStream(): void {
+    if (!this.pc) return;
+    const senders = this.pc.getSenders();
+    for (const sender of senders) {
+      if (sender.track) {
+        this.pc.removeTrack(sender);
+        logger.info('Removed sender track from RTCPeerConnection');
+      }
+    }
   }
 
   async createOffer(): Promise<RTCSessionDescriptionInit> {
@@ -104,6 +124,7 @@ export class PeerConnectionManager {
       this.pc.onconnectionstatechange = null;
       this.pc.oniceconnectionstatechange = null;
       this.pc.onicecandidate = null;
+      this.pc.ontrack = null;
       this.pc.close();
       this.pc = null;
       logger.info('RTCPeerConnection closed');
@@ -130,6 +151,13 @@ export class PeerConnectionManager {
     this.pc.onicecandidate = (event) => {
       if (event.candidate) {
         this.callbacks?.onIceCandidate(event.candidate);
+      }
+    };
+
+    this.pc.ontrack = (event) => {
+      if (event.streams && event.streams[0]) {
+        logger.info('Received remote track from peer', { trackId: event.track.id, kind: event.track.kind });
+        this.callbacks?.onTrack?.(event.streams[0]);
       }
     };
   }
