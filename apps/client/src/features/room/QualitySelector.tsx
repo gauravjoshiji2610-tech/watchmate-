@@ -22,7 +22,7 @@ export const QualitySelector: React.FC<QualitySelectorProps> = ({
     { value: '480p', label: '480p (Default SD)' },
     { value: '720p', label: '720p (HD)' },
     { value: '1080p', label: '1080p (Full HD)' },
-    { value: 'auto', label: 'Auto (Adaptive)' },
+    { value: 'auto', label: 'Auto (Browser Default)' },
   ];
 
   return (
