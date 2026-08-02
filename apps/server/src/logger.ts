@@ -16,7 +16,7 @@ import { config } from './config.js';
  */
 export const logger = pino({
   level: config.LOG_LEVEL,
-  base: { service: 'antigravity-server' },
+  base: { service: 'watchmate-server' },
   timestamp: pino.stdTimeFunctions.isoTime,
   ...(config.NODE_ENV === 'development' && {
     transport: {

@@ -17,7 +17,7 @@ export const OfflinePage: React.FC = () => {
         <div className="space-y-2">
           <h1 className="text-2xl font-bold">You are offline</h1>
           <p className="text-sm text-slate-400">
-            Please check your internet connection. AntiGravity requires an active network connection for WebRTC signaling and real-time screen sharing.
+            Please check your internet connection. WatchMate requires an active network connection for WebRTC signaling and real-time screen sharing.
           </p>
         </div>
 

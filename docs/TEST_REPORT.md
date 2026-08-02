@@ -1,4 +1,4 @@
-# TEST_REPORT.md — AntiGravity v1.0 Quality Assurance Report
+# TEST_REPORT.md — WatchMate v1.0 Quality Assurance Report
 
 **Date:** August 2, 2026  
 **Tested By:** Engineering QA (Phases 9–10)  

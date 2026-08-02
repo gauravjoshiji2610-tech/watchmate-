@@ -14,7 +14,7 @@ export const Header: React.FC = () => {
           </div>
           <div className="flex flex-col">
             <span className="font-bold text-lg tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-200 to-slate-400">
-              AntiGravity
+              WatchMate
             </span>
             <span className="text-[10px] uppercase font-semibold tracking-widest text-brand-400 -mt-1">
               Screen Share

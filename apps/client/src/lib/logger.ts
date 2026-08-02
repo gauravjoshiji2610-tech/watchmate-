@@ -9,7 +9,7 @@ type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 class ClientLogger {
   private formatMessage(level: LogLevel, message: string, meta?: Record<string, unknown>): void {
     const timestamp = new Date().toISOString();
-    const prefix = `[${timestamp}] [AntiGravity-Client] [${level.toUpperCase()}]`;
+    const prefix = `[${timestamp}] [WatchMate-Client] [${level.toUpperCase()}]`;
 
     const consoleMethod = level === 'debug' ? console.debug : level === 'info' ? console.info : level === 'warn' ? console.warn : console.error;
 

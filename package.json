@@ -1,8 +1,8 @@
 {
   "name": "antigravity",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
-  "description": "AntiGravity — lightweight 1-to-1 real-time screen sharing platform",
+  "description": "WatchMate — Real-time Screen Sharing & Collaboration Platform powered by WebRTC",
   "engines": {
     "node": ">=22.0.0",
     "pnpm": ">=11.0.0"

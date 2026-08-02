@@ -62,7 +62,7 @@ function loadConfig(): Config {
       .join('\n');
 
     console.error(
-      `\n[AntiGravity] Server startup failed — invalid environment variables:\n${formatted}\n\n` +
+      `\n[WatchMate] Server startup failed — invalid environment variables:\n${formatted}\n\n` +
         `Copy apps/server/.env.example to apps/server/.env and fill in required values.\n`,
     );
     process.exit(1);

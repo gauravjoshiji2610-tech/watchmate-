@@ -5,9 +5,9 @@ export const Footer: React.FC = () => {
     <footer className="w-full border-t border-slate-800/60 bg-slate-950/60 py-8 mt-auto">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-slate-500">
         <div className="flex items-center gap-2">
-          <span className="font-semibold text-slate-400">AntiGravity v0.1.0</span>
+          <span className="font-semibold text-slate-400">WatchMate v1.0</span>
           <span>•</span>
-          <span>Lightweight 1-to-1 Screen Sharing</span>
+          <span>Real-time Screen Sharing & Collaboration</span>
         </div>
 
         <div className="flex items-center gap-6">

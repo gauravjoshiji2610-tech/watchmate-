@@ -13,7 +13,7 @@ export const ConnectionLostPage: React.FC = () => {
         <div className="space-y-2">
           <h1 className="text-2xl font-bold">Connection Lost</h1>
           <p className="text-sm text-slate-400">
-            Reconnecting to the AntiGravity signaling server... 20-second session grace period is active.
+            Reconnecting to the WatchMate signaling server... 20-second session grace period is active.
           </p>
         </div>
 

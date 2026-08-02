@@ -14,7 +14,7 @@ export const Hero: React.FC = () => {
       >
         <Badge variant="brand">
           <Sparkles size={12} />
-          AntiGravity MVP 1-to-1
+          WatchMate v1.0
         </Badge>
       </motion.div>
 

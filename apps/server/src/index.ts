@@ -24,7 +24,7 @@ import { setSocketioReady } from './routes/health.js';
  * The health endpoint will report 'degraded' until Redis responds.
  */
 async function main(): Promise<void> {
-  logger.info({ nodeVersion: process.version, env: config.NODE_ENV }, 'AntiGravity server starting...');
+  logger.info({ nodeVersion: process.version, env: config.NODE_ENV }, 'WatchMate server starting...');
 
   // Step 3: Express app
   const app = createApp();
@@ -59,7 +59,7 @@ async function main(): Promise<void> {
           corsOrigin: config.CORS_ORIGIN,
           logLevel: config.LOG_LEVEL,
         },
-        `AntiGravity server listening on port ${config.PORT}`,
+        `WatchMate server listening on port ${config.PORT}`,
       );
       resolve();
     });
@@ -102,6 +102,6 @@ async function main(): Promise<void> {
 
 main().catch((err: unknown) => {
   // config.ts may not have run yet if this fires very early — use console as fallback
-  console.error('[AntiGravity] Fatal startup error:', err);
+  console.error('[WatchMate] Fatal startup error:', err);
   process.exit(1);
 });

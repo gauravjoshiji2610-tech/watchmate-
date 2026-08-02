@@ -36,7 +36,7 @@ export const TopBar: React.FC<TopBarProps> = ({
             <ShieldCheck size={18} />
           </div>
           <span className="font-bold text-base text-white tracking-tight hidden sm:inline">
-            AntiGravity
+            WatchMate
           </span>
         </Link>
 
