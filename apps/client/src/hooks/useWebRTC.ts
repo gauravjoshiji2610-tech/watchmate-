@@ -41,6 +41,12 @@ export function useWebRTC(roomId?: string, isHost = false) {
     }
   }, []);
 
+  const replaceLocalTrack = useCallback((kind: 'video' | 'audio', track: MediaStreamTrack | null) => {
+    if (pcManagerRef.current) {
+      pcManagerRef.current.replaceTrack(kind, track);
+    }
+  }, []);
+
   const connectSignaling = useCallback(
     (targetRoomId: string) => {
       disconnectWebRTC();
@@ -151,6 +157,7 @@ export function useWebRTC(roomId?: string, isHost = false) {
     remoteStream,
     addLocalStream,
     removeLocalStream,
+    replaceLocalTrack,
     connectSignaling,
     startNegotiation,
     disconnectWebRTC,

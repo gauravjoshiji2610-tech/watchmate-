@@ -1,42 +1,57 @@
 import React, { useState } from 'react';
 import { Settings } from 'lucide-react';
-import { toast } from 'sonner';
+import type { ResolutionPreset } from '@/services/media/CameraManager';
 
-export type Quality = '1080p' | '720p' | '480p';
+export interface QualitySelectorProps {
+  currentPreset?: ResolutionPreset | undefined;
+  onSelectPreset?: ((preset: ResolutionPreset) => void) | undefined;
+}
 
-export const QualitySelector: React.FC = () => {
-  const [quality, setQuality] = useState<Quality>('1080p');
+export const QualitySelector: React.FC<QualitySelectorProps> = ({
+  currentPreset = '480p',
+  onSelectPreset,
+}) => {
   const [isOpen, setIsOpen] = useState(false);
 
-  const selectQuality = (q: Quality) => {
-    setQuality(q);
+  const selectPreset = (p: ResolutionPreset) => {
+    onSelectPreset?.(p);
     setIsOpen(false);
-    toast.info(`Stream quality set to ${q}`);
   };
+
+  const options: { value: ResolutionPreset; label: string }[] = [
+    { value: '480p', label: '480p (Default SD)' },
+    { value: '720p', label: '720p (HD)' },
+    { value: '1080p', label: '1080p (Full HD)' },
+    { value: 'auto', label: 'Auto (Adaptive)' },
+  ];
 
   return (
     <div className="relative">
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-900/90 border border-slate-800 hover:border-slate-700 text-xs font-medium text-slate-300 hover:text-white transition-colors"
+        aria-label={`Select video resolution quality. Current: ${currentPreset}`}
+        aria-expanded={isOpen}
+        className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-900/90 border border-slate-800 hover:border-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500/50 text-xs font-medium text-slate-300 hover:text-white transition-colors"
       >
         <Settings size={14} />
-        <span>{quality}</span>
+        <span className="uppercase font-mono">{currentPreset}</span>
       </button>
 
       {isOpen && (
-        <div className="absolute bottom-full mb-2 right-0 w-32 glass rounded-xl border border-slate-800 p-1 space-y-0.5 z-50 shadow-2xl">
-          {(['1080p', '720p', '480p'] as Quality[]).map((q) => (
+        <div className="absolute bottom-full mb-2 left-0 w-44 glass rounded-xl border border-slate-800 p-1 space-y-0.5 z-50 shadow-2xl">
+          {options.map((opt) => (
             <button
-              key={q}
+              key={opt.value}
               type="button"
-              onClick={() => selectQuality(q)}
-              className={`w-full text-left px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                quality === q ? 'bg-brand-600 text-white' : 'text-slate-300 hover:bg-slate-800'
+              onClick={() => selectPreset(opt.value)}
+              className={`w-full text-left px-3 py-1.5 rounded-lg text-xs font-medium transition-colors focus:outline-none focus:bg-slate-800 ${
+                currentPreset === opt.value
+                  ? 'bg-brand-600 text-white font-semibold'
+                  : 'text-slate-300 hover:bg-slate-800'
               }`}
             >
-              {q} {q === '1080p' ? '(Full HD)' : ''}
+              {opt.label}
             </button>
           ))}
         </div>
