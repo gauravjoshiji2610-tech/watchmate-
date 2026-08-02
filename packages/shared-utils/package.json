@@ -2,13 +2,13 @@
   "name": "@antigravity/shared-utils",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "description": "Pure utility functions shared between client and server. No framework-specific code.",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs",
+      "default": "./dist/index.js",
       "types": "./dist/index.d.ts"
     }
   },

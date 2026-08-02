@@ -2,13 +2,13 @@
   "name": "@antigravity/shared-schemas",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "description": "Zod validation schemas for all WebSocket events and API payloads.",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs",
+      "default": "./dist/index.js",
       "types": "./dist/index.d.ts"
     }
   },
