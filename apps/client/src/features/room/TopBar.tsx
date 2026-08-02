@@ -3,15 +3,22 @@ import { Link } from 'react-router-dom';
 import { ShieldCheck, Copy, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import { StatusIndicator } from '@/components/common/StatusIndicator';
+import { ConnectionStatus } from '@/components/common/ConnectionStatus';
 import { ThemeToggle } from '@/components/common/ThemeToggle';
 import { Badge } from '@/components/ui/Badge';
+import type { WebRTCConnectionState } from '@/services/webrtc/ConnectionState';
 
 export interface TopBarProps {
   roomId: string;
   isHost?: boolean;
+  webRTCState?: WebRTCConnectionState;
 }
 
-export const TopBar: React.FC<TopBarProps> = ({ roomId, isHost = false }) => {
+export const TopBar: React.FC<TopBarProps> = ({
+  roomId,
+  isHost = false,
+  webRTCState = 'new',
+}) => {
   const [copied, setCopied] = React.useState(false);
 
   const copyRoomId = () => {
@@ -52,6 +59,7 @@ export const TopBar: React.FC<TopBarProps> = ({ roomId, isHost = false }) => {
       </div>
 
       <div className="flex items-center gap-3">
+        <ConnectionStatus state={webRTCState} />
         <StatusIndicator />
         <ThemeToggle />
       </div>
