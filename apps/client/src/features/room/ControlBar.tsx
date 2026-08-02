@@ -17,9 +17,17 @@ import { QualitySelector } from './QualitySelector';
 
 export interface ControlBarProps {
   isHost?: boolean;
+  isSharing?: boolean;
+  isSupported?: boolean;
+  onToggleScreenShare?: () => void;
 }
 
-export const ControlBar: React.FC<ControlBarProps> = ({ isHost = false }) => {
+export const ControlBar: React.FC<ControlBarProps> = ({
+  isHost = false,
+  isSharing = false,
+  isSupported = true,
+  onToggleScreenShare,
+}) => {
   const navigate = useNavigate();
   const [isMicMuted, setIsMicMuted] = useState(false);
   const [isCameraOff, setIsCameraOff] = useState(true);
@@ -36,9 +44,15 @@ export const ControlBar: React.FC<ControlBarProps> = ({ isHost = false }) => {
   };
 
   const handleScreenShareClick = () => {
-    toast.warning('WebRTC Screen Share disabled in Phase 7 UI prototype', {
-      description: 'WebRTC media streaming will be activated in Phase 8.',
-    });
+    if (!isHost) {
+      toast.error('Only the host can share their screen');
+      return;
+    }
+    if (!isSupported) {
+      toast.error('Screen sharing is not supported on this browser/device');
+      return;
+    }
+    onToggleScreenShare?.();
   };
 
   const toggleFullscreen = () => {
@@ -90,16 +104,20 @@ export const ControlBar: React.FC<ControlBarProps> = ({ isHost = false }) => {
           {isCameraOff ? <VideoOff size={18} /> : <Camera size={18} />}
         </Button>
 
-        {/* Screen Share Button (disabled for WebRTC Phase 8) */}
-        <Button
-          variant="primary"
-          size="md"
-          onClick={handleScreenShareClick}
-          className="gap-2 px-5 rounded-full"
-        >
-          <Monitor size={18} />
-          <span className="hidden sm:inline">Share Screen</span>
-        </Button>
+        {/* Screen Share Button (Host Only) */}
+        {isHost && (
+          <Button
+            variant={isSharing ? 'danger' : 'primary'}
+            size="md"
+            onClick={handleScreenShareClick}
+            className="gap-2 px-5 rounded-full"
+          >
+            <Monitor size={18} />
+            <span className="hidden sm:inline">
+              {isSharing ? 'Stop Sharing' : 'Share Screen'}
+            </span>
+          </Button>
+        )}
 
         <Button
           variant="secondary"
