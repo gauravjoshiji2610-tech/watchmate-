@@ -22,11 +22,12 @@ export const RoomPage: React.FC = () => {
 
   const currentRoomId = roomId || 'demo-room';
 
-  // WebRTC P2P connection hook (Phase 8A, 8B & 8C)
+  // WebRTC P2P connection hook (Phase 8A, 8B, 8C & 8D)
   const {
     connectionState,
     remoteStream,
     peerUserToken,
+    stats,
     addLocalStream,
     removeLocalStream,
     replaceLocalTrack,
@@ -128,6 +129,7 @@ export const RoomPage: React.FC = () => {
           isHost={isHost}
           isSupported={isSupported}
           error={displayError}
+          stats={stats}
         />
         <ChatPanel displayName={displayName} />
       </main>
