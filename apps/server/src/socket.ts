@@ -2,20 +2,20 @@ import { Server as HttpServer } from 'http';
 import { Server as SocketIOServer } from 'socket.io';
 import { config } from './config.js';
 import { logger } from './logger.js';
-import { truncateToken } from './logger.js';
+import { setupSignalingNamespace } from './sockets/namespaces/signaling.js';
+import { setupPresenceNamespace } from './sockets/namespaces/presence.js';
+import { setupChatNamespace } from './sockets/namespaces/chat.js';
 
 /**
- * Socket.IO server instance — bootstrap only.
+ * Socket.IO server initialization.
  *
- * Phase 2: Initializes the Socket.IO server, logs connections/disconnections.
- *          No namespaces, no room logic, no event handlers.
+ * Architecture (ADR-002):
+ * Three Socket.IO namespaces, isolated structurally:
+ *   - /signaling : offer, answer, ice_candidate
+ *   - /presence  : join_room, leave_room, reconnect, host_end_room, etc.
+ *   - /chat      : send_message, message
  *
- * Phase 3: Three namespaces (/signaling, /presence, /chat) are added here.
- *          Auth middleware is applied per namespace.
- *          SDP payload size limit middleware is applied to /signaling.
- *
- * Architecture (ADR-002): Three namespaces — signaling, presence, chat.
- * Architecture (ADR-003): Auth validates userToken from socket.handshake.auth.
+ * Each namespace is initialized with its authentication and payload validation middleware.
  */
 export function initSocketIO(httpServer: HttpServer): SocketIOServer {
   const io = new SocketIOServer(httpServer, {
@@ -23,40 +23,17 @@ export function initSocketIO(httpServer: HttpServer): SocketIOServer {
       origin: config.CORS_ORIGIN,
       credentials: true,
     },
-    // Transports: WebSocket first, polling fallback
     transports: ['websocket', 'polling'],
-    // Ping/pong to detect dead connections
     pingTimeout: 30000,
     pingInterval: 10000,
-    // Limits on per-message size (defence in depth alongside SDP middleware in Phase 3)
     maxHttpBufferSize: 1e6, // 1 MB
   });
 
-  // ── Root namespace — bootstrap logging only ─────────────────────────────────
-  // Phase 3 will replace this with specific namespace handlers.
-  io.on('connection', (socket) => {
-    const userToken = (socket.handshake.auth as { userToken?: string }).userToken ?? 'unknown';
+  // Initialize isolated namespaces (ADR-002)
+  setupSignalingNamespace(io);
+  setupPresenceNamespace(io);
+  setupChatNamespace(io);
 
-    logger.info(
-      {
-        socketId: socket.id,
-        token: userToken !== 'unknown' ? truncateToken(userToken) : 'none',
-        transport: socket.conn.transport.name,
-      },
-      'Socket connected (root namespace — Phase 3 will move this to namespaces)',
-    );
-
-    socket.on('disconnect', (reason) => {
-      logger.info(
-        {
-          socketId: socket.id,
-          reason,
-        },
-        'Socket disconnected',
-      );
-    });
-  });
-
-  logger.info('Socket.IO server initialized');
+  logger.info('Socket.IO server initialized with isolated namespaces (/signaling, /presence, /chat)');
   return io;
 }

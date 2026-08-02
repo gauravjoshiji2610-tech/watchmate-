@@ -1,5 +1,8 @@
-// @antigravity/shared-schemas
-// Zod validation schemas for all WebSocket event payloads and API inputs.
-// Validates both shape AND sender/receiver role authorization.
+// @antigravity/shared-schemas — barrel export
+// Zod validation schemas. Only allowed runtime dependency: zod.
 
-export {};
+export { eventEnvelopeSchema } from './envelope.js';
+export type { EventEnvelopeInput, EventEnvelopeParsed } from './envelope.js';
+
+export { sdpPayloadSchema, iceCandidatePayloadSchema } from './signaling.js';
+export type { SdpPayload, IceCandidatePayload } from './signaling.js';
