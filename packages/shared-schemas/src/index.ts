@@ -11,10 +11,12 @@ export {
   joinRoomPayloadSchema,
   leaveRoomPayloadSchema,
   hostEndRoomPayloadSchema,
+  reconnectPayloadSchema,
 } from './presence.js';
 
 export type {
   JoinRoomPayload,
   LeaveRoomPayload,
   HostEndRoomPayload,
+  ReconnectPayload,
 } from './presence.js';

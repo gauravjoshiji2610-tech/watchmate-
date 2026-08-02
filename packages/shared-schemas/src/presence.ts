@@ -40,3 +40,11 @@ export const hostEndRoomPayloadSchema = z.object({
 });
 
 export type HostEndRoomPayload = z.infer<typeof hostEndRoomPayloadSchema>;
+
+// ── RECONNECT ─────────────────────────────────────────────────────────────────
+
+export const reconnectPayloadSchema = z.object({
+  roomId: z.string().min(1, 'roomId must not be empty').max(50),
+});
+
+export type ReconnectPayload = z.infer<typeof reconnectPayloadSchema>;
