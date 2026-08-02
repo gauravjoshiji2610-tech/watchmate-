@@ -58,6 +58,10 @@ export const PresenceEvents = {
   USER_JOINED: 'user_joined',
   /** Broadcast: a user left the room */
   USER_LEFT: 'user_left',
+  /** Broadcast: a user disconnected temporarily (reconnect grace period started) */
+  USER_DISCONNECTED_TEMPORARILY: 'user_disconnected_temporarily',
+  /** Broadcast: a user reconnected within grace period */
+  USER_RECONNECTED: 'user_reconnected',
   /** Broadcast: host ended the room — all clients must disconnect */
   ROOM_CLOSED: 'room_closed',
   /** Unicast to reconnecting client: reconnect accepted, state restored */
