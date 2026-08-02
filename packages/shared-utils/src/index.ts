@@ -1,5 +1,4 @@
-// @antigravity/shared-utils
-// Pure utility functions. No framework-specific imports.
-// Must be safe to run in both Node.js and browser environments.
+// @antigravity/shared-utils — barrel export
+// Pure utility functions shared between client and server. No framework-specific imports.
 
-export {};
+export { generateRoomId, generateUserToken } from './idUtils.js';
