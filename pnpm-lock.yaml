@@ -32,6 +32,9 @@ importers:
       '@antigravity/shared-types':
         specifier: workspace:*
         version: link:../../packages/shared-types
+      '@antigravity/shared-utils':
+        specifier: workspace:*
+        version: link:../../packages/shared-utils
       cors:
         specifier: ^2.8.5
         version: 2.8.6

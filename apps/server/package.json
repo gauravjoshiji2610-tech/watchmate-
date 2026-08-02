@@ -16,6 +16,7 @@
   "dependencies": {
     "@antigravity/shared-schemas": "workspace:*",
     "@antigravity/shared-types": "workspace:*",
+    "@antigravity/shared-utils": "workspace:*",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",

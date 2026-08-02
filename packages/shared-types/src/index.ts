@@ -17,3 +17,5 @@ export type {
   ChatEventName,
   ServerErrorCode,
 } from './events.js';
+
+export type { Role, Participant, Room, UserTokenBinding } from './room.js';
