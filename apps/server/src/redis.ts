@@ -56,6 +56,13 @@ export function getRedisClient(): Redis {
 }
 
 /**
+ * Sets or overrides the singleton Redis client (used for unit testing with mock clients).
+ */
+export function setRedisClient(client: Redis | null): void {
+  redisClient = client;
+}
+
+/**
  * Pings Redis and returns a status string.
  * Used by the health endpoint.
  *
