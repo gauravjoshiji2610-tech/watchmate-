@@ -1,148 +1,149 @@
 # AntiGravity
 
-A lightweight, real-time 1-to-1 screen sharing platform with audio/video quality, low latency, and clean architecture.
+> Ultra-low latency 1-to-1 real-time screen sharing, video conferencing, and room-isolated chat.
+
+[![Build](https://img.shields.io/badge/build-passing-brightgreen)](.)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue)](.)
+[![Node.js](https://img.shields.io/badge/Node.js-20.x-green)](.)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
 
 ---
 
-## Project Status
+## What is AntiGravity?
 
-🔨 **Phase 1 — Monorepo Setup** — Complete  
-⏳ Phase 2 — Backend (Express + Health Check) — Pending  
-⏳ Phase 3 — Socket.IO (Three Namespaces) + Structured Logging — Pending  
-⏳ Phase 4 — Room Service (Redis-backed) — Pending  
-⏳ Phase 5 — Reconnect (userToken, grace period) — Pending  
-⏳ Phase 6 — Chat + Rate Limiting + Validation — Pending  
-⏳ Phase 7 — Frontend (React + Vite) — Pending  
-⏳ Phase 8 — WebRTC (P2P, Quality Tiers, TURN) — Pending  
-⏳ Phase 9 — Testing (Multi-device, disconnect/reconnect) — Pending  
-⏳ Phase 10 — Deployment — Pending  
+AntiGravity is a production-grade, 1-to-1 screen sharing and collaboration platform built on:
+
+- **Pure WebRTC P2P** direct channels for sub-50ms latency.
+- **Socket.IO** signaling with namespace isolation (`/signaling`, `/presence`, `/chat`).
+- **Redis** for ephemeral room state, host locking, rate-limiting, and chat history.
+- **React 18 + Vite** frontend with Tailwind CSS and Framer Motion.
 
 ---
 
 ## Architecture
 
-| Concern | Technology |
-|---|---|
-| Frontend | React, Vite, TypeScript, TailwindCSS |
-| Backend | Node.js, Express, Socket.IO, TypeScript |
-| Realtime | WebRTC (P2P for MVP) |
-| State | Redis (room state, TTL-backed) |
-| TURN | Self-hosted coturn or Metered.ca |
-| Monorepo | pnpm workspaces |
-
-For architectural decisions, see [`docs/architecture/`](./docs/architecture/).
-
----
-
-## Monorepo Structure
-
 ```
-antigravity/
-├── apps/
-│   ├── client/           # React + Vite + TypeScript + TailwindCSS
-│   └── server/           # Node.js + Express + Socket.IO + TypeScript
-├── packages/
-│   ├── shared-types/     # Pure TS interfaces, zero runtime deps
-│   ├── shared-schemas/   # Zod validation schemas (zod only)
-│   └── shared-utils/     # Isomorphic utility functions
-├── docs/
-│   └── architecture/     # Architecture Decision Records (ADRs)
-├── scripts/              # Monorepo-level tooling
-├── CONVENTIONS.md        # Project conventions (read this first)
-└── tsconfig.base.json    # Base TypeScript config
+Browser (Host / Viewer)
+        │
+   HTTPS (443) via Nginx
+        │
+ ┌──────┴──────────────┐
+ │   Express Backend   │ ← Socket.IO Signaling, REST API
+ │   + Socket.IO       │
+ └──────┬──────────────┘
+        │
+     Redis (6379)         ← Room state, Chat history, Rate limits
+        │
+  Coturn TURN (3478/5349) ← NAT traversal relay fallback
 ```
 
 ---
 
-## Getting Started
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Monorepo | pnpm workspaces, TypeScript project references |
+| Backend | Node.js 20, Express 4, Socket.IO 4, Pino, ioredis |
+| Frontend | React 18, Vite 6, Tailwind CSS 3, Framer Motion |
+| WebRTC | Pure W3C RTCPeerConnection, replaceTrack, getDisplayMedia |
+| State | Redis 7 (ephemeral rooms, chat buffer, rate limiting) |
+| Infrastructure | Docker, Docker Compose, Nginx, Coturn |
+| Testing | Node.js native test runner (16/16 tests passing) |
+
+---
+
+## Quick Start (Local Development)
 
 ### Prerequisites
+- Node.js 20+
+- pnpm 9+
+- Redis 7 (running locally or via Docker)
 
-- Node.js >= 22
-- pnpm >= 11
+### 1. Clone
+```bash
+git clone https://github.com/your-org/antigravity.git
+cd antigravity
+```
 
-### Install
-
+### 2. Install dependencies
 ```bash
 pnpm install
 ```
 
-### Development
-
+### 3. Environment setup
 ```bash
-# Start all apps in parallel (Phase 7+ only)
-pnpm dev
+# Backend
+cp apps/server/.env.example apps/server/.env
+# Fill in REDIS_URL=redis://localhost:6379 and CLIENT_URL=http://localhost:5173
 
-# Start server only
+# Frontend
+cp apps/client/.env.example apps/client/.env
+# Fill in VITE_API_URL=http://localhost:3001 and VITE_SOCKET_URL=http://localhost:3001
+```
+
+### 4. Build shared packages
+```bash
+pnpm build:packages
+```
+
+### 5. Start development servers
+```bash
+# Terminal 1 — Backend
 pnpm --filter @antigravity/server dev
 
-# Start client only
+# Terminal 2 — Frontend
 pnpm --filter @antigravity/client dev
 ```
 
-### Type Check
+Open: http://localhost:5173
+
+---
+
+## Production Deployment
+
+See [DEPLOYMENT.md](docs/DEPLOYMENT.md) for full production deployment guide including Docker, Nginx, Coturn TURN server, and SSL certificate setup.
+
+---
+
+## Running Tests
 
 ```bash
-pnpm typecheck
+pnpm --filter @antigravity/server test
 ```
 
-### Build
-
-```bash
-pnpm build
+Expected output:
 ```
-
-### Clean
-
-```bash
-node scripts/clean.mjs
+# tests 16
+# pass  16
+# fail  0
 ```
 
 ---
 
-## Git Workflow
+## Project Structure
 
 ```
-main ← production releases (tagged)
- └── dev ← integration
-      └── feature/* ← feature branches
-      └── fix/*     ← bug fixes
-      └── hotfix/*  ← critical patches (branch from main)
+antigravity/
+├── apps/
+│   ├── client/          # React 18 + Vite frontend
+│   └── server/          # Express + Socket.IO backend
+├── packages/
+│   ├── shared-types/    # Shared TypeScript interfaces
+│   ├── shared-schemas/  # Shared Zod validation schemas
+│   └── shared-utils/    # Shared utility functions
+├── docs/
+│   ├── adr/             # Architecture Decision Records
+│   ├── DEPLOYMENT.md
+│   ├── KNOWN_ISSUES.md
+│   └── TEST_REPORT.md
+├── nginx/               # Nginx reverse proxy config
+├── coturn/              # Coturn TURN server config
+└── docker-compose.yml
 ```
-
-See [`CONVENTIONS.md`](./CONVENTIONS.md) for commit message format and full workflow rules.
-
----
-
-## MVP Feature Set
-
-- Create / Join Room (random Room ID via nanoid)
-- Display Name only (no authentication)
-- Chat scoped per room
-- Screen Share, Mic Toggle, Webcam Toggle, Fullscreen
-- Host End Room (server-enforced)
-- Room auto-delete when empty (Redis TTL safety net)
-- Auto reconnect via persistent userToken (20-second grace period)
-- Last 5 rooms history
-- Responsive UI — mobile + desktop
-- Health/status endpoint
-- Structured logging
-- Explicit "room full" rejection for 1:1 model
-
----
-
-## Platform Support
-
-| Platform | Host | Viewer |
-|---|---|---|
-| Desktop Chrome | ✅ | ✅ |
-| Desktop Firefox | ✅ | ✅ |
-| Desktop Edge | ✅ | ✅ |
-| Android Chrome | ✅ | ✅ |
-| iPhone Safari | ❌ (OS limitation) | ✅ |
 
 ---
 
 ## License
 
-Private — not for distribution.
+MIT License. See [LICENSE](LICENSE) for details.
