@@ -20,3 +20,6 @@ export type {
   HostEndRoomPayload,
   ReconnectPayload,
 } from './presence.js';
+
+export { sendMessagePayloadSchema } from './chat.js';
+export type { SendMessagePayload } from './chat.js';
