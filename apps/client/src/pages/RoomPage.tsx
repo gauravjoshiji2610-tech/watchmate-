@@ -5,6 +5,7 @@ import { TopBar } from '@/features/room/TopBar';
 import { VideoContainer } from '@/features/room/VideoContainer';
 import { ChatPanel } from '@/features/room/ChatPanel';
 import { ControlBar } from '@/features/room/ControlBar';
+import { useWebRTC } from '@/hooks/useWebRTC';
 
 export const RoomPage: React.FC = () => {
   const { roomId } = useParams<{ roomId: string }>();
@@ -16,10 +17,13 @@ export const RoomPage: React.FC = () => {
 
   const currentRoomId = roomId || 'demo-room';
 
+  // Initialize WebRTC signaling and peer connection lifecycle (Phase 8A)
+  const { connectionState } = useWebRTC(currentRoomId, isHost);
+
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-slate-950 text-slate-100 overflow-hidden">
       {/* Top Navigation Bar */}
-      <TopBar roomId={currentRoomId} isHost={isHost} />
+      <TopBar roomId={currentRoomId} isHost={isHost} webRTCState={connectionState} />
 
       {/* Main Content Area (Video Stream + Side Chat Panel) */}
       <main className="flex-1 w-full h-[calc(100vh-8rem)] p-3 sm:p-4 flex flex-col lg:flex-row gap-3 sm:gap-4 overflow-hidden">
