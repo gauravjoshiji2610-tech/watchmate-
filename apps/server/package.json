@@ -3,15 +3,32 @@
   "version": "0.1.0",
   "private": true,
   "description": "AntiGravity signaling server — Node.js, Express, Socket.IO, TypeScript.",
+  "type": "module",
+  "main": "./dist/index.js",
   "scripts": {
-    "build": "echo 'Not implemented yet — Phase 2'",
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc --build",
+    "start": "node dist/index.js",
     "clean": "rimraf dist *.tsbuildinfo",
-    "typecheck": "echo 'Not implemented yet — Phase 2'",
-    "dev": "echo 'Not implemented yet — Phase 2'",
+    "typecheck": "tsc --noEmit",
     "test": "echo 'Not implemented yet'"
   },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "ioredis": "^5.6.1",
+    "pino": "^9.6.0",
+    "socket.io": "^4.8.1",
+    "zod": "^3.24.1"
+  },
   "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.1",
+    "@types/node": "^22.15.34",
+    "pino-pretty": "^13.0.0",
     "rimraf": "^6.0.1",
+    "tsx": "^4.19.4",
     "typescript": "^5.7.3"
   }
 }
