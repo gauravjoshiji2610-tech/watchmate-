@@ -33,22 +33,44 @@ export class PeerConnectionManager {
     logger.info('RTCPeerConnection initialized');
   }
 
+  /**
+   * Adds local MediaStreamTracks to RTCPeerConnection using modern W3C addTrack() API.
+   * `addStream` is only an internal helper method name on our manager class.
+   */
   addStream(stream: MediaStream): void {
     if (!this.pc) return;
     for (const track of stream.getTracks()) {
       this.pc.addTrack(track, stream);
-      logger.info('Added local track to RTCPeerConnection', { kind: track.kind, id: track.id });
+      logger.info('Added local track via RTCPeerConnection.addTrack()', { kind: track.kind, id: track.id });
     }
   }
 
+  /**
+   * Removes all local senders from RTCPeerConnection using modern W3C removeTrack() API.
+   * `removeStream` is only an internal helper method name on our manager class.
+   */
   removeStream(): void {
     if (!this.pc) return;
     const senders = this.pc.getSenders();
     for (const sender of senders) {
       if (sender.track) {
         this.pc.removeTrack(sender);
-        logger.info('Removed sender track from RTCPeerConnection');
+        logger.info('Removed sender track via RTCPeerConnection.removeTrack()');
       }
+    }
+  }
+
+  /**
+   * Seamlessly swaps a specific track (video or audio) on the active RTCRtpSender
+   * using modern W3C RTCRtpSender.replaceTrack() API without re-negotiation.
+   */
+  async replaceTrack(kind: 'video' | 'audio', newTrack: MediaStreamTrack | null): Promise<void> {
+    if (!this.pc) return;
+    const senders = this.pc.getSenders();
+    const sender = senders.find((s) => s.track?.kind === kind);
+    if (sender) {
+      await sender.replaceTrack(newTrack);
+      logger.info(`Replaced ${kind} track via modern RTCRtpSender.replaceTrack()`, { trackId: newTrack?.id });
     }
   }
 
@@ -156,7 +178,7 @@ export class PeerConnectionManager {
 
     this.pc.ontrack = (event) => {
       if (event.streams && event.streams[0]) {
-        logger.info('Received remote track from peer', { trackId: event.track.id, kind: event.track.kind });
+        logger.info('Received remote track from peer via ontrack', { trackId: event.track.id, kind: event.track.kind });
         this.callbacks?.onTrack?.(event.streams[0]);
       }
     };
