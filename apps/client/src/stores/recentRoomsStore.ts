@@ -29,16 +29,25 @@ export function useRecentRoomsStore() {
       joinedAt: Date.now(),
     };
 
-    const filtered = recentRooms.filter((r) => r.roomId !== room.roomId);
-    const updated = [newEntry, ...filtered].slice(0, MAX_RECENT);
-
-    setRecentRoomsState(updated);
-    localStorage.setItem(RECENT_ROOMS_KEY, JSON.stringify(updated));
+    setRecentRoomsState((prev) => {
+      const filtered = prev.filter((r) => r.roomId !== room.roomId);
+      const updated = [newEntry, ...filtered].slice(0, MAX_RECENT);
+      try {
+        localStorage.setItem(RECENT_ROOMS_KEY, JSON.stringify(updated));
+      } catch {
+        // localStorage quota or security exception handling
+      }
+      return updated;
+    });
   };
 
   const clearRecentRooms = () => {
     setRecentRoomsState([]);
-    localStorage.removeItem(RECENT_ROOMS_KEY);
+    try {
+      localStorage.removeItem(RECENT_ROOMS_KEY);
+    } catch {
+      // Ignore storage exception
+    }
   };
 
   return { recentRooms, addRecentRoom, clearRecentRooms };
