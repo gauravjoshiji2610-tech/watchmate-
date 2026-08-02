@@ -1,6 +1,7 @@
 import React, { useRef, useEffect } from 'react';
-import { Monitor, User, AlertTriangle, ShieldAlert } from 'lucide-react';
+import { Monitor, User, AlertTriangle, ShieldAlert, Activity } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
+import type { WebRTCStatsReport } from '@/services/webrtc/WebRTCStatsMonitor';
 
 export interface VideoContainerProps {
   stream?: MediaStream | null;
@@ -8,6 +9,7 @@ export interface VideoContainerProps {
   isHost?: boolean;
   isSupported?: boolean;
   error?: Error | null;
+  stats?: WebRTCStatsReport | null;
 }
 
 export const VideoContainer: React.FC<VideoContainerProps> = ({
@@ -16,6 +18,7 @@ export const VideoContainer: React.FC<VideoContainerProps> = ({
   isHost = false,
   isSupported = true,
   error = null,
+  stats = null,
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -39,7 +42,10 @@ export const VideoContainer: React.FC<VideoContainerProps> = ({
   }, [stream]);
 
   return (
-    <div className="relative flex-1 w-full h-full bg-slate-950 rounded-2xl border border-slate-800/80 overflow-hidden flex flex-col items-center justify-center min-h-[300px] shadow-2xl">
+    <div
+      id="video-container"
+      className="relative flex-1 w-full h-full bg-slate-950 rounded-2xl border border-slate-800/80 overflow-hidden flex flex-col items-center justify-center min-h-[300px] shadow-2xl"
+    >
       {/* Active Video Element */}
       {stream ? (
         <video
@@ -101,14 +107,29 @@ export const VideoContainer: React.FC<VideoContainerProps> = ({
         </div>
       )}
 
-      {/* Stats Overlay (Top-Left) */}
-      <div className="absolute top-4 left-4 z-20 flex items-center gap-2">
-        <span className="px-2.5 py-1 rounded-md bg-slate-900/90 border border-slate-800/80 backdrop-blur-md text-[11px] font-mono text-slate-300">
-          1080p • 60 FPS
-        </span>
-        {stream && (
-          <span className="px-2.5 py-1 rounded-md bg-slate-900/90 border border-slate-800/80 backdrop-blur-md text-[11px] font-mono text-emerald-400">
-            {isLocal ? 'Local Preview' : 'P2P Stream Active'}
+      {/* Live WebRTC Telemetry Stats Overlay (Top-Left) */}
+      <div className="absolute top-4 left-4 z-20 flex flex-wrap items-center gap-2">
+        {stats ? (
+          <>
+            <span className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-slate-900/90 border border-slate-800/80 backdrop-blur-md text-[11px] font-mono text-slate-300">
+              <Activity size={12} className="text-brand-400" />
+              <span>
+                {stats.bitrateKbps >= 1000
+                  ? `${(stats.bitrateKbps / 1000).toFixed(1)} Mbps`
+                  : `${stats.bitrateKbps} kbps`}{' '}
+                • {stats.fps} FPS
+              </span>
+            </span>
+            <span className="px-2.5 py-1 rounded-md bg-slate-900/90 border border-slate-800/80 backdrop-blur-md text-[11px] font-mono text-slate-300">
+              RTT: {stats.rttMs}ms
+            </span>
+            <span className="px-2.5 py-1 rounded-md bg-slate-900/90 border border-slate-800/80 backdrop-blur-md text-[11px] font-mono uppercase text-emerald-400">
+              {stats.candidateType === 'relay' ? 'TURN Relay' : 'P2P STUN'}
+            </span>
+          </>
+        ) : (
+          <span className="px-2.5 py-1 rounded-md bg-slate-900/90 border border-slate-800/80 backdrop-blur-md text-[11px] font-mono text-slate-400">
+            WebRTC Telemetry Ready
           </span>
         )}
       </div>

@@ -1,4 +1,6 @@
 import { logger } from '../../lib/logger.js';
+import { getRTCConfiguration } from './RTCConfig.js';
+import { WebRTCStatsMonitor, type WebRTCStatsReport } from './WebRTCStatsMonitor.js';
 import {
   mapPeerConnectionState,
   type WebRTCConnectionState,
@@ -8,34 +10,58 @@ export interface PeerConnectionCallbacks {
   onStateChange: (state: WebRTCConnectionState) => void;
   onIceCandidate: (candidate: RTCIceCandidate) => void;
   onTrack?: (stream: MediaStream) => void;
+  onStats?: (stats: WebRTCStatsReport) => void;
+  onIceRestartRequired?: () => void;
 }
-
-const DEFAULT_RTC_CONFIG: RTCConfiguration = {
-  iceServers: [
-    { urls: 'stun:stun.l.google.com:19302' },
-    { urls: 'stun:stun1.l.google.com:19302' },
-  ],
-  iceCandidatePoolSize: 10,
-};
 
 export class PeerConnectionManager {
   private pc: RTCPeerConnection | null = null;
   private callbacks: PeerConnectionCallbacks | null = null;
   private pendingCandidates: RTCIceCandidateInit[] = [];
+  private statsMonitor: WebRTCStatsMonitor = new WebRTCStatsMonitor();
 
   initialize(callbacks: PeerConnectionCallbacks, customConfig?: RTCConfiguration): void {
     this.close();
 
     this.callbacks = callbacks;
-    this.pc = new RTCPeerConnection(customConfig ?? DEFAULT_RTC_CONFIG);
+    const config = customConfig ?? getRTCConfiguration();
+    this.pc = new RTCPeerConnection(config);
 
     this.setupListeners();
-    logger.info('RTCPeerConnection initialized');
+
+    if (callbacks.onStats) {
+      this.statsMonitor.start(this.pc, callbacks.onStats);
+    }
+
+    logger.info('RTCPeerConnection initialized with dynamic STUN/TURN configuration');
+  }
+
+  /**
+   * Initiates ICE restart to recover from WiFi/Mobile network disconnects or ICE failure.
+   */
+  async restartIce(): Promise<RTCSessionDescriptionInit> {
+    if (!this.pc) {
+      throw new Error('PeerConnection not initialized');
+    }
+
+    try {
+      logger.info('Initiating WebRTC ICE restart');
+      if (typeof this.pc.restartIce === 'function') {
+        this.pc.restartIce();
+      }
+
+      const offer = await this.pc.createOffer({ iceRestart: true });
+      await this.pc.setLocalDescription(offer);
+      logger.info('Created WebRTC ICE restart SDP offer');
+      return offer;
+    } catch (err) {
+      logger.error('Failed to create WebRTC ICE restart offer', { err });
+      throw err;
+    }
   }
 
   /**
    * Adds local MediaStreamTracks to RTCPeerConnection using modern W3C addTrack() API.
-   * `addStream` is only an internal helper method name on our manager class.
    */
   addStream(stream: MediaStream): void {
     if (!this.pc) return;
@@ -47,7 +73,6 @@ export class PeerConnectionManager {
 
   /**
    * Removes all local senders from RTCPeerConnection using modern W3C removeTrack() API.
-   * `removeStream` is only an internal helper method name on our manager class.
    */
   removeStream(): void {
     if (!this.pc) return;
@@ -142,6 +167,7 @@ export class PeerConnectionManager {
   }
 
   close(): void {
+    this.statsMonitor.stop();
     if (this.pc) {
       this.pc.onconnectionstatechange = null;
       this.pc.oniceconnectionstatechange = null;
@@ -167,7 +193,13 @@ export class PeerConnectionManager {
 
     this.pc.oniceconnectionstatechange = () => {
       if (!this.pc) return;
-      logger.debug('ICE Connection State Changed', { state: this.pc.iceConnectionState });
+      const iceState = this.pc.iceConnectionState;
+      logger.info('ICE Connection State Changed', { state: iceState });
+
+      if (iceState === 'disconnected' || iceState === 'failed') {
+        logger.warn('ICE connection state degraded (disconnected/failed). Triggering recovery hook.');
+        this.callbacks?.onIceRestartRequired?.();
+      }
     };
 
     this.pc.onicecandidate = (event) => {

@@ -5,6 +5,7 @@ import type { SdpPayload, IceCandidatePayload } from '@antigravity/shared-schema
 import { PeerConnectionManager } from '../services/webrtc/PeerConnectionManager.js';
 import { SignalingService } from '../services/webrtc/SignalingService.js';
 import type { WebRTCConnectionState } from '../services/webrtc/ConnectionState.js';
+import type { WebRTCStatsReport } from '../services/webrtc/WebRTCStatsMonitor.js';
 import { getOrCreateUserToken } from '../services/roomService.js';
 import { logger } from '../lib/logger.js';
 
@@ -12,6 +13,7 @@ export function useWebRTC(roomId?: string, isHost = false) {
   const [connectionState, setConnectionState] = useState<WebRTCConnectionState>('new');
   const [peerUserToken, setPeerUserToken] = useState<string | null>(null);
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
+  const [stats, setStats] = useState<WebRTCStatsReport | null>(null);
 
   const pcManagerRef = useRef<PeerConnectionManager | null>(null);
   const signalingRef = useRef<SignalingService | null>(null);
@@ -26,6 +28,7 @@ export function useWebRTC(roomId?: string, isHost = false) {
     setConnectionState('closed');
     setPeerUserToken(null);
     setRemoteStream(null);
+    setStats(null);
     logger.info('WebRTC hook cleaned up');
   }, []);
 
@@ -46,6 +49,20 @@ export function useWebRTC(roomId?: string, isHost = false) {
       pcManagerRef.current.replaceTrack(kind, track);
     }
   }, []);
+
+  const triggerIceRestart = useCallback(async () => {
+    if (!pcManagerRef.current || !signalingRef.current || !peerUserToken) {
+      return;
+    }
+
+    try {
+      toast.warning('Network disconnect detected. Attempting WebRTC ICE restart...');
+      const offer = await pcManagerRef.current.restartIce();
+      signalingRef.current.sendOffer(peerUserToken, offer);
+    } catch (err) {
+      toast.error('WebRTC ICE restart failed');
+    }
+  }, [peerUserToken]);
 
   const connectSignaling = useCallback(
     (targetRoomId: string) => {
@@ -74,6 +91,12 @@ export function useWebRTC(roomId?: string, isHost = false) {
         onTrack: (stream) => {
           setRemoteStream(stream);
           toast.info('Received remote video stream');
+        },
+        onStats: (statsReport) => {
+          setStats(statsReport);
+        },
+        onIceRestartRequired: () => {
+          triggerIceRestart();
         },
       });
 
@@ -119,7 +142,7 @@ export function useWebRTC(roomId?: string, isHost = false) {
         },
       });
     },
-    [userToken, peerUserToken, disconnectWebRTC],
+    [userToken, peerUserToken, disconnectWebRTC, triggerIceRestart],
   );
 
   const startNegotiation = useCallback(
@@ -155,9 +178,11 @@ export function useWebRTC(roomId?: string, isHost = false) {
     isConnected: connectionState === 'connected',
     peerUserToken,
     remoteStream,
+    stats,
     addLocalStream,
     removeLocalStream,
     replaceLocalTrack,
+    triggerIceRestart,
     connectSignaling,
     startNegotiation,
     disconnectWebRTC,

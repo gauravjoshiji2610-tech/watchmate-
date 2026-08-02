@@ -15,6 +15,7 @@ import {
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/Button';
 import { QualitySelector } from './QualitySelector';
+import { isCurrentlyFullscreen, requestElementFullscreen, exitElementFullscreen } from '@/lib/fullscreen';
 import type { ResolutionPreset } from '@/services/media/CameraManager';
 
 export interface ControlBarProps {
@@ -71,12 +72,13 @@ export const ControlBar: React.FC<ControlBarProps> = ({
     onToggleScreenShare?.();
   };
 
-  const toggleFullscreen = () => {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch(() => {});
+  const toggleFullscreen = async () => {
+    const videoContainer = document.getElementById('video-container') || document.documentElement;
+    if (!isCurrentlyFullscreen()) {
+      await requestElementFullscreen(videoContainer);
       setIsFullscreen(true);
     } else {
-      document.exitFullscreen().catch(() => {});
+      await exitElementFullscreen();
       setIsFullscreen(false);
     }
   };
