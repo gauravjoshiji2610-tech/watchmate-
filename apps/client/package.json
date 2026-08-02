@@ -1,0 +1,17 @@
+{
+  "name": "@antigravity/client",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AntiGravity frontend — React, Vite, TypeScript, TailwindCSS.",
+  "scripts": {
+    "build": "echo 'Not implemented yet — Phase 7'",
+    "clean": "rimraf dist *.tsbuildinfo",
+    "typecheck": "echo 'Not implemented yet — Phase 7'",
+    "dev": "echo 'Not implemented yet — Phase 7'",
+    "test": "echo 'Not implemented yet'"
+  },
+  "devDependencies": {
+    "rimraf": "^6.0.1",
+    "typescript": "^5.7.3"
+  }
+}

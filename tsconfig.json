@@ -1,0 +1,12 @@
+# Root tsconfig — references all packages for editor support (go-to-definition across packages)
+# Each package has its own tsconfig.json that extends tsconfig.base.json
+{
+  "files": [],
+  "references": [
+    { "path": "packages/shared-types" },
+    { "path": "packages/shared-schemas" },
+    { "path": "packages/shared-utils" },
+    { "path": "apps/server" },
+    { "path": "apps/client" }
+  ]
+}
