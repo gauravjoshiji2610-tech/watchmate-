@@ -1,8 +1,8 @@
 {
   "name": "@antigravity/server",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
-  "description": "AntiGravity signaling server — Node.js, Express, Socket.IO, TypeScript.",
+  "description": "WatchMate signaling server — Node.js, Express, Socket.IO, TypeScript.",
   "type": "module",
   "main": "./dist/index.js",
   "scripts": {

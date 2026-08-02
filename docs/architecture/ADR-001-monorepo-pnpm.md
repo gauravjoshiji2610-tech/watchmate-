@@ -8,7 +8,7 @@
 
 ## Context
 
-AntiGravity consists of a frontend (React/Vite), a backend (Node.js/Express/Socket.IO), and shared TypeScript code (types, validation schemas, utilities). These components must share types without duplication while remaining independently deployable.
+WatchMate consists of a frontend (React/Vite), a backend (Node.js/Express/Socket.IO), and shared TypeScript code (types, validation schemas, utilities). These components must share types without duplication while remaining independently deployable.
 
 ## Decision
 

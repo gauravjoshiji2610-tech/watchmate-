@@ -1,6 +1,6 @@
-# DEPLOYMENT.md — AntiGravity Production Deployment Guide
+# DEPLOYMENT.md — WatchMate Production Deployment Guide
 
-This guide covers the complete steps to deploy AntiGravity to a production Linux server using Docker Compose, Nginx reverse proxy, Coturn TURN relay, and Let's Encrypt SSL.
+This guide covers the complete steps to deploy WatchMate to a production Linux server using Docker Compose, Nginx reverse proxy, Coturn TURN relay, and Let's Encrypt SSL.
 
 ---
 
@@ -11,7 +11,7 @@ This guide covers the complete steps to deploy AntiGravity to a production Linux
 | VPS / Cloud VM | 2 vCPU, 2 GB RAM |
 | OS | Ubuntu 22.04 LTS |
 | Open Ports | 80, 443, 3478 (UDP/TCP), 5349 (TLS), 49152–65535 (UDP) |
-| Domain | Fully qualified domain name (e.g. `antigravity.example.com`) |
+| Domain | Fully qualified domain name (e.g. `watchmate.example.com`) |
 
 ---
 
@@ -36,15 +36,15 @@ sudo usermod -aG docker $USER && newgrp docker
 ## Step 2 — Clone the Repository
 
 ```bash
-git clone https://github.com/your-org/antigravity.git
-cd antigravity
+git clone https://github.com/your-org/watchmate.git
+cd watchmate
 ```
 
 ---
 
 ## Step 3 — Obtain SSL/TLS Certificates
 
-AntiGravity requires valid HTTPS for `getDisplayMedia()` and `getUserMedia()` in production browsers.
+WatchMate requires valid HTTPS for `getDisplayMedia()` and `getUserMedia()` in production browsers.
 
 ```bash
 # Install Certbot
@@ -75,7 +75,7 @@ CLIENT_URL=https://your-domain.com
 VITE_API_URL=https://your-domain.com
 VITE_SOCKET_URL=https://your-domain.com
 VITE_TURN_URL=turns:your-domain.com:5349
-VITE_TURN_USERNAME=antigravity
+VITE_TURN_USERNAME=watchmate
 VITE_TURN_PASSWORD=your-very-strong-password
 TURN_SECRET=your-64-char-random-secret
 ```
@@ -93,7 +93,7 @@ nano coturn/turnserver.conf
 Set:
 ```
 realm=your-domain.com
-user=antigravity:your-very-strong-password
+user=watchmate:your-very-strong-password
 ```
 
 Ensure paths to your TLS certificates are correct.
@@ -147,7 +147,7 @@ Use [Trickle ICE](https://webrtc.github.io/samples/src/content/peerconnection/tr
 1. Open https://webrtc.github.io/samples/src/content/peerconnection/trickle-ice/
 2. Add your TURN credentials:
    - URI: `turns:your-domain.com:5349`
-   - Username: `antigravity`
+   - Username: `watchmate`
    - Password: your TURN password
 3. Click **Gather candidates**
 4. Confirm a `relay` candidate appears in the results.

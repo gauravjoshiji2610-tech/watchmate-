@@ -64,7 +64,7 @@ export const VideoContainer: React.FC<VideoContainerProps> = ({
           <div className="space-y-1">
             <h3 className="font-bold text-lg text-white">Browser Unsupported for Hosting</h3>
             <p className="text-xs text-amber-300/80">
-              iOS Safari and mobile browsers do not support screen broadcast. You can join as a Viewer from mobile, or open AntiGravity on Desktop Chrome/Edge to share your screen.
+              iOS Safari and mobile browsers do not support screen broadcast. You can join as a Viewer from mobile, or open WatchMate on Desktop Chrome/Edge to share your screen.
             </p>
           </div>
           <Badge variant="warning" className="mt-2">

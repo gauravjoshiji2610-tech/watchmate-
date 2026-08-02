@@ -1,11 +1,11 @@
-# v1.0.0 Release Notes — AntiGravity
+# v1.0.0 Release Notes — WatchMate
 **Release Date:** August 2, 2026
 
 ---
 
 ## Overview
 
-AntiGravity v1.0.0 is the initial production release of a real-time 1-to-1 screen sharing, video conferencing, and room-isolated chat platform built entirely on pure WebRTC P2P direct channels with Redis-backed state orchestration.
+WatchMate v1.0.0 is the initial production release of a real-time 1-to-1 screen sharing, video conferencing, and room-isolated chat platform built entirely on pure WebRTC P2P direct channels with Redis-backed state orchestration.
 
 ---
 

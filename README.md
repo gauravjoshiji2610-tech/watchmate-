@@ -1,6 +1,6 @@
-# AntiGravity
+# WatchMate
 
-> Ultra-low latency 1-to-1 real-time screen sharing, video conferencing, and room-isolated chat.
+> WatchMate — Real-time Screen Sharing & Collaboration Platform powered by WebRTC.
 
 [![Build](https://img.shields.io/badge/build-passing-brightgreen)](.)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue)](.)
@@ -9,9 +9,9 @@
 
 ---
 
-## What is AntiGravity?
+## What is WatchMate?
 
-AntiGravity is a production-grade, 1-to-1 screen sharing and collaboration platform built on:
+WatchMate is a production-grade, 1-to-1 screen sharing and collaboration platform built on:
 
 - **Pure WebRTC P2P** direct channels for sub-50ms latency.
 - **Socket.IO** signaling with namespace isolation (`/signaling`, `/presence`, `/chat`).
@@ -62,8 +62,8 @@ Browser (Host / Viewer)
 
 ### 1. Clone
 ```bash
-git clone https://github.com/your-org/antigravity.git
-cd antigravity
+git clone https://github.com/your-org/watchmate.git
+cd watchmate
 ```
 
 ### 2. Install dependencies
@@ -96,6 +96,8 @@ pnpm --filter @antigravity/server dev
 pnpm --filter @antigravity/client dev
 ```
 
+> **Note:** Internal package names (`@antigravity/*`) are preserved in v1.0. See _Future Cleanup (v1.1)_ section below.
+
 Open: http://localhost:5173
 
 ---
@@ -124,7 +126,7 @@ Expected output:
 ## Project Structure
 
 ```
-antigravity/
+watchmate/
 ├── apps/
 │   ├── client/          # React 18 + Vite frontend
 │   └── server/          # Express + Socket.IO backend
@@ -141,6 +143,23 @@ antigravity/
 ├── coturn/              # Coturn TURN server config
 └── docker-compose.yml
 ```
+
+---
+
+## Future Cleanup (v1.1)
+
+The following internal identifiers still use the `@antigravity` namespace. They will be renamed in v1.1 after a full import migration:
+
+| Identifier | Type | Action |
+|------------|------|--------|
+| `@antigravity/shared-types` | npm package name | Rename to `@watchmate/shared-types` in v1.1 |
+| `@antigravity/shared-schemas` | npm package name | Rename to `@watchmate/shared-schemas` in v1.1 |
+| `@antigravity/shared-utils` | npm package name | Rename to `@watchmate/shared-utils` in v1.1 |
+| `@antigravity/client` | npm package name | Rename to `@watchmate/client` in v1.1 |
+| `@antigravity/server` | npm package name | Rename to `@watchmate/server` in v1.1 |
+| `antigravity_user_token` | localStorage key | Migrate with backward-compat shim in v1.1 |
+| `antigravity_recent_rooms` | localStorage key | Migrate with backward-compat shim in v1.1 |
+| `antigravity_theme` | localStorage key | Migrate with backward-compat shim in v1.1 |
 
 ---
 

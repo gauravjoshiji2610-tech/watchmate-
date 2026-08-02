@@ -1,4 +1,4 @@
-# KNOWN_ISSUES.md — AntiGravity v1.0
+# KNOWN_ISSUES.md — WatchMate v1.0
 
 This document tracks all known issues, limitations, and deferred items as of v1.0 release.
 
@@ -29,7 +29,7 @@ This document tracks all known issues, limitations, and deferred items as of v1.
 - **Target**: v1.1
 
 ### DF-002 — Multi-Party SFU Architecture (v2.0)
-- **Description**: AntiGravity v1.0 supports 1-to-1 P2P sessions only. Scaling to multi-party (3+ participants) requires an SFU (Selective Forwarding Unit) such as Mediasoup or LiveKit.
+- **Description**: WatchMate v1.0 supports 1-to-1 P2P sessions only. Scaling to multi-party (3+ participants) requires an SFU (Selective Forwarding Unit) such as Mediasoup or LiveKit.
 - **Target**: v2.0
 
 ### DF-003 — Background Blur / Virtual Backgrounds (v1.1)

@@ -1,4 +1,4 @@
-# AntiGravity Project Conventions
+# WatchMate Project Conventions
 
 This document defines conventions that apply to the entire project. Read this before writing any code.
 

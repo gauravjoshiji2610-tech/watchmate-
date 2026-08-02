@@ -1,6 +1,6 @@
 # CHANGELOG.md
 
-All notable changes to AntiGravity are documented in this file.  
+All notable changes to WatchMate are documented in this file.  
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---

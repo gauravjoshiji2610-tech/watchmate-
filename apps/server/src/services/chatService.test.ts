@@ -7,13 +7,13 @@ describe('Chat Message Validation Tests', () => {
     const input = {
       messageId: 'msg-123',
       roomId: 'room-abc',
-      message: '  Hello AntiGravity!  ',
+      message: '  Hello WatchMate!  ',
     };
 
     const result = sendMessagePayloadSchema.safeParse(input);
     assert.equal(result.success, true);
     if (result.success) {
-      assert.equal(result.data.message, 'Hello AntiGravity!');
+      assert.equal(result.data.message, 'Hello WatchMate!');
     }
   });
 
