@@ -19,3 +19,4 @@ export type {
 } from './events.js';
 
 export type { Role, Participant, Room, UserTokenBinding } from './room.js';
+export type { ChatMessage } from './chat.js';

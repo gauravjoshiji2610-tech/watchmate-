@@ -74,22 +74,18 @@ export const PresenceEvents = {
 
 export type PresenceEventName = (typeof PresenceEvents)[keyof typeof PresenceEvents];
 
-// ── /chat namespace ───────────────────────────────────────────────────────────
-// Messages only. Phase 6 implements handlers. (ADR-007: no message history in MVP)
-
 export const ChatEvents = {
   // Client → Server
   /** Client sends a chat message */
-  SEND_MESSAGE: 'send_message',
+  SEND_MESSAGE: 'chat:send',
 
   // Server → Client
   /** Broadcast: a chat message from any participant */
-  MESSAGE: 'message',
-  /**
-   * Unicast on join: notifies client that no chat history is available.
-   * Per ADR-007 (Option A): chat history is intentionally not stored.
-   */
-  HISTORY_NOTICE: 'history_notice',
+  MESSAGE: 'chat:message',
+  /** Error event on /chat namespace */
+  ERROR: 'chat:error',
+  /** Unicast on room join: last 50 chat messages */
+  HISTORY: 'chat:history',
 } as const;
 
 export type ChatEventName = (typeof ChatEvents)[keyof typeof ChatEvents];
@@ -113,6 +109,8 @@ export const ServerErrors = {
   PAYLOAD_TOO_LARGE: 'ERR_PAYLOAD_TOO_LARGE',
   RECONNECT_EXPIRED: 'ERR_RECONNECT_EXPIRED',
   AUTH_FAILED: 'ERR_AUTH_FAILED',
+  CHAT_RATE_LIMITED: 'ERR_CHAT_RATE_LIMITED',
+  DUPLICATE_MESSAGE_ID: 'ERR_DUPLICATE_MESSAGE_ID',
 } as const;
 
 export type ServerErrorCode = (typeof ServerErrors)[keyof typeof ServerErrors];
