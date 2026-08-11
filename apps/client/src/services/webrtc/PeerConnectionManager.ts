@@ -223,31 +223,68 @@ export class PeerConnectionManager {
     this.pc.onconnectionstatechange = () => {
       if (!this.pc) return;
       const mappedState = mapPeerConnectionState(this.pc.connectionState);
-      logger.info('WebRTC Peer Connection State Changed', { state: mappedState });
+      logger.info('[WebRTC Diagnostic] Peer Connection State Changed', {
+        rawState: this.pc.connectionState,
+        mappedState,
+        localSenders: this.pc.getSenders().length,
+        remoteReceivers: this.pc.getReceivers().length,
+      });
       this.callbacks?.onStateChange(mappedState);
     };
 
     this.pc.oniceconnectionstatechange = () => {
       if (!this.pc) return;
       const iceState = this.pc.iceConnectionState;
-      logger.info('ICE Connection State Changed', { state: iceState });
+      logger.info('[WebRTC Diagnostic] ICE Connection State Changed', {
+        iceState,
+        gatheringState: this.pc.iceGatheringState,
+      });
 
       if (iceState === 'disconnected' || iceState === 'failed') {
-        logger.warn('ICE connection state degraded (disconnected/failed). Triggering recovery hook.');
+        logger.warn('[WebRTC Diagnostic] ICE connection degraded. Triggering ICE restart recovery.');
         this.callbacks?.onIceRestartRequired?.();
       }
     };
 
+    this.pc.onicegatheringstatechange = () => {
+      if (!this.pc) return;
+      logger.info('[WebRTC Diagnostic] ICE Gathering State Changed', {
+        gatheringState: this.pc.iceGatheringState,
+      });
+    };
+
+    this.pc.onsignalingstatechange = () => {
+      if (!this.pc) return;
+      logger.info('[WebRTC Diagnostic] Signaling State Changed', {
+        signalingState: this.pc.signalingState,
+      });
+    };
+
     this.pc.onicecandidate = (event) => {
       if (event.candidate) {
+        logger.debug('[WebRTC Diagnostic] Local ICE candidate gathered', {
+          protocol: event.candidate.protocol,
+          type: event.candidate.type,
+        });
         this.callbacks?.onIceCandidate(event.candidate);
+      } else {
+        logger.info('[WebRTC Diagnostic] Local ICE candidate gathering complete');
       }
     };
 
     this.pc.ontrack = (event) => {
+      logger.info('[WebRTC Diagnostic] Remote track received via ontrack', {
+        trackKind: event.track.kind,
+        trackId: event.track.id,
+        trackLabel: event.track.label,
+        streamCount: event.streams.length,
+      });
       if (event.streams && event.streams[0]) {
-        logger.info('Received remote track from peer via ontrack', { trackId: event.track.id, kind: event.track.kind });
         this.callbacks?.onTrack?.(event.streams[0]);
+      } else {
+        // Fallback: If track arrives without attached MediaStream, create one
+        const stream = new MediaStream([event.track]);
+        this.callbacks?.onTrack?.(stream);
       }
     };
   }
