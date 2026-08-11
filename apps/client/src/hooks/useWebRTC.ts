@@ -50,6 +50,15 @@ export function useWebRTC(roomId?: string, isHost = false) {
     }
   }, []);
 
+  const setRoleTrack = useCallback(
+    (role: 'video' | 'micAudio' | 'systemAudio', track: MediaStreamTrack | null, stream?: MediaStream) => {
+      if (pcManagerRef.current) {
+        pcManagerRef.current.setRoleTrack(role, track, stream);
+      }
+    },
+    [],
+  );
+
   const triggerIceRestart = useCallback(async () => {
     if (!pcManagerRef.current || !signalingRef.current || !peerUserToken) {
       return;
@@ -182,6 +191,7 @@ export function useWebRTC(roomId?: string, isHost = false) {
     addLocalStream,
     removeLocalStream,
     replaceLocalTrack,
+    setRoleTrack,
     triggerIceRestart,
     connectSignaling,
     startNegotiation,

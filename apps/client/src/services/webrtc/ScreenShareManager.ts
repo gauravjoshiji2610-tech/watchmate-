@@ -38,18 +38,36 @@ export class ScreenShareManager {
     }
 
     try {
-      logger.info('Requesting screen capture stream via getDisplayMedia()');
-      const displayStream = await navigator.mediaDevices.getDisplayMedia({
-        video: {
-          displaySurface: 'monitor',
-          cursor: 'always',
-        } as MediaTrackConstraints,
-        audio: false,
-      });
+      logger.info('Requesting screen capture stream with system audio via getDisplayMedia()');
+      let displayStream: MediaStream;
+      try {
+        displayStream = await navigator.mediaDevices.getDisplayMedia({
+          video: {
+            displaySurface: 'monitor',
+            cursor: 'always',
+          } as MediaTrackConstraints,
+          audio: {
+            echoCancellation: false,
+            noiseSuppression: false,
+            autoGainControl: false,
+          } as MediaTrackConstraints,
+        });
+      } catch {
+        logger.info('Detailed system audio constraints rejected, falling back to audio: true');
+        displayStream = await navigator.mediaDevices.getDisplayMedia({
+          video: {
+            displaySurface: 'monitor',
+            cursor: 'always',
+          } as MediaTrackConstraints,
+          audio: true,
+        });
+      }
 
       this.stream = displayStream;
 
       const videoTrack = displayStream.getVideoTracks()[0];
+      const systemAudioTrack = displayStream.getAudioTracks()[0];
+
       if (videoTrack) {
         // Handle native browser "Stop Sharing" button, window close, or stream revocation
         videoTrack.onended = () => {
@@ -60,8 +78,9 @@ export class ScreenShareManager {
       }
 
       logger.info('Screen share stream acquired successfully', {
-        trackId: videoTrack?.id,
-        label: videoTrack?.label,
+        videoTrackId: videoTrack?.id,
+        systemAudioTrackId: systemAudioTrack?.id,
+        hasSystemAudio: Boolean(systemAudioTrack),
       });
 
       return displayStream;
@@ -104,5 +123,13 @@ export class ScreenShareManager {
    */
   getStream(): MediaStream | null {
     return this.stream;
+  }
+
+  getSystemAudioTrack(): MediaStreamTrack | null {
+    return this.stream?.getAudioTracks()[0] ?? null;
+  }
+
+  getVideoTrack(): MediaStreamTrack | null {
+    return this.stream?.getVideoTracks()[0] ?? null;
   }
 }

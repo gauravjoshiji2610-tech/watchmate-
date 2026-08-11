@@ -1,17 +1,31 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { toast } from 'sonner';
 import { MicrophoneManager } from '../services/media/MicrophoneManager.js';
+import { AudioProcessor } from '../services/media/AudioProcessor.js';
 import { logger } from '../lib/logger.js';
 
+const MIC_VOLUME_KEY = 'watchmate_mic_volume';
+const MIC_MUTED_KEY = 'watchmate_mic_muted';
+
 export function useMicrophone(onTrackReplaced?: (track: MediaStreamTrack | null) => void) {
-  const [isMicMuted, setIsMicMuted] = useState(false);
+  const [micVolume, setMicVolumeState] = useState<number>(() => {
+    const saved = localStorage.getItem(MIC_VOLUME_KEY);
+    return saved ? Math.max(0, Math.min(100, Number(saved))) : 100;
+  });
+
+  const [isMicMuted, setIsMicMutedState] = useState<boolean>(() => {
+    return localStorage.getItem(MIC_MUTED_KEY) === 'true';
+  });
+
   const [activeMicId, setActiveMicId] = useState<string | null>(null);
   const [audioStream, setAudioStream] = useState<MediaStream | null>(null);
   const [error, setError] = useState<Error | null>(null);
 
   const managerRef = useRef<MicrophoneManager>(new MicrophoneManager());
+  const processorRef = useRef<AudioProcessor>(new AudioProcessor('MicrophoneProcessor'));
 
   const stopMicrophone = useCallback(() => {
+    processorRef.current.cleanup();
     managerRef.current.stopMicrophone();
     setAudioStream(null);
     setActiveMicId(null);
@@ -26,11 +40,12 @@ export function useMicrophone(onTrackReplaced?: (track: MediaStreamTrack | null)
         const stream = await managerRef.current.acquireMicrophone({ deviceId });
         setAudioStream(stream);
 
-        const track = stream.getAudioTracks()[0];
-        setActiveMicId(deviceId ?? track?.getSettings().deviceId ?? null);
+        const rawTrack = stream.getAudioTracks()[0];
+        setActiveMicId(deviceId ?? rawTrack?.getSettings().deviceId ?? null);
 
-        if (track) {
-          onTrackReplaced?.(track);
+        if (rawTrack) {
+          const processedTrack = processorRef.current.processTrack(rawTrack, micVolume, isMicMuted);
+          onTrackReplaced?.(processedTrack);
         }
 
         toast.success('Microphone activated');
@@ -42,15 +57,31 @@ export function useMicrophone(onTrackReplaced?: (track: MediaStreamTrack | null)
         return null;
       }
     },
-    [onTrackReplaced],
+    [micVolume, isMicMuted, onTrackReplaced],
   );
+
+  const setMicVolume = useCallback((volume: number) => {
+    const clamped = Math.max(0, Math.min(100, volume));
+    setMicVolumeState(clamped);
+    localStorage.setItem(MIC_VOLUME_KEY, clamped.toString());
+    processorRef.current.setVolume(clamped);
+  }, []);
 
   const toggleMic = useCallback(() => {
     const newMutedState = !isMicMuted;
-    const resultMuted = managerRef.current.setMuted(newMutedState);
-    setIsMicMuted(resultMuted);
-    toast.info(resultMuted ? 'Microphone muted' : 'Microphone unmuted');
+    setIsMicMutedState(newMutedState);
+    localStorage.setItem(MIC_MUTED_KEY, newMutedState.toString());
+    managerRef.current.setMuted(newMutedState);
+    processorRef.current.setMuted(newMutedState);
+    toast.info(newMutedState ? 'Microphone muted' : 'Microphone unmuted');
   }, [isMicMuted]);
+
+  const setMicMuted = useCallback((muted: boolean) => {
+    setIsMicMutedState(muted);
+    localStorage.setItem(MIC_MUTED_KEY, muted.toString());
+    managerRef.current.setMuted(muted);
+    processorRef.current.setMuted(muted);
+  }, []);
 
   const switchMicrophone = useCallback(
     async (deviceId: string) => {
@@ -65,17 +96,21 @@ export function useMicrophone(onTrackReplaced?: (track: MediaStreamTrack | null)
 
   useEffect(() => {
     return () => {
+      processorRef.current.cleanup();
       managerRef.current.stopMicrophone();
     };
   }, []);
 
   return {
     isMicMuted,
+    micVolume,
     activeMicId,
     audioStream,
     error,
     startMicrophone,
     toggleMic,
+    setMicMuted,
+    setMicVolume,
     switchMicrophone,
     stopMicrophone,
   };

@@ -19,6 +19,7 @@ export class PeerConnectionManager {
   private callbacks: PeerConnectionCallbacks | null = null;
   private pendingCandidates: RTCIceCandidateInit[] = [];
   private statsMonitor: WebRTCStatsMonitor = new WebRTCStatsMonitor();
+  private sendersByRole: Map<'video' | 'micAudio' | 'systemAudio', RTCRtpSender> = new Map();
 
   initialize(callbacks: PeerConnectionCallbacks, customConfig?: RTCConfiguration): void {
     this.close();
@@ -61,6 +62,40 @@ export class PeerConnectionManager {
   }
 
   /**
+   * Manages local MediaStreamTrack senders by specific role ('video', 'micAudio', 'systemAudio').
+   * Allows independent addition, track replacement, or removal of mic vs system audio tracks.
+   */
+  async setRoleTrack(
+    role: 'video' | 'micAudio' | 'systemAudio',
+    track: MediaStreamTrack | null,
+    stream?: MediaStream,
+  ): Promise<void> {
+    if (!this.pc) return;
+
+    const existingSender = this.sendersByRole.get(role);
+
+    if (existingSender) {
+      if (track) {
+        await existingSender.replaceTrack(track);
+        logger.info(`Replaced ${role} track on existing sender`, { trackId: track.id });
+      } else {
+        try {
+          this.pc.removeTrack(existingSender);
+        } catch {
+          /* ignore */
+        }
+        this.sendersByRole.delete(role);
+        logger.info(`Removed ${role} sender from RTCPeerConnection`);
+      }
+    } else if (track) {
+      const parentStream = stream || new MediaStream([track]);
+      const sender = this.pc.addTrack(track, parentStream);
+      this.sendersByRole.set(role, sender);
+      logger.info(`Added ${role} track via RTCPeerConnection.addTrack()`, { trackId: track.id, role });
+    }
+  }
+
+  /**
    * Adds local MediaStreamTracks to RTCPeerConnection using modern W3C addTrack() API.
    */
   addStream(stream: MediaStream): void {
@@ -83,6 +118,7 @@ export class PeerConnectionManager {
         logger.info('Removed sender track via RTCPeerConnection.removeTrack()');
       }
     }
+    this.sendersByRole.clear();
   }
 
   /**

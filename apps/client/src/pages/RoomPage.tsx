@@ -22,37 +22,38 @@ export const RoomPage: React.FC = () => {
 
   const currentRoomId = roomId || 'demo-room';
 
-  // WebRTC P2P connection hook (Phase 8A, 8B, 8C & 8D)
+  // WebRTC P2P connection hook
   const {
     connectionState,
     remoteStream,
     peerUserToken,
     stats,
-    addLocalStream,
-    removeLocalStream,
     replaceLocalTrack,
+    setRoleTrack,
     startNegotiation,
   } = useWebRTC(currentRoomId, isHost);
 
-  // Enumerate audio and video hardware devices (Phase 8C)
+  // Enumerate audio and video hardware devices
   const { audioInputs, videoInputs } = useMediaDevices();
 
-  // Microphone manager hook (Phase 8C)
+  // Microphone manager hook with Web Audio processor
   const handleAudioTrackReplaced = useCallback(
     (track: MediaStreamTrack | null) => {
-      replaceLocalTrack('audio', track);
+      setRoleTrack('micAudio', track);
     },
-    [replaceLocalTrack],
+    [setRoleTrack],
   );
 
   const {
     isMicMuted,
+    micVolume,
     activeMicId,
     toggleMic,
+    setMicVolume,
     switchMicrophone,
   } = useMicrophone(handleAudioTrackReplaced);
 
-  // Camera manager hook (Phase 8C)
+  // Camera manager hook
   const handleVideoTrackReplaced = useCallback(
     (track: MediaStreamTrack | null) => {
       replaceLocalTrack('video', track);
@@ -71,29 +72,41 @@ export const RoomPage: React.FC = () => {
     changeResolution,
   } = useCamera(handleVideoTrackReplaced);
 
-  // Screen share stream manager hook (Phase 8B)
-  const handleStreamChange = useCallback(
-    (stream: MediaStream | null) => {
+  // Screen share & System Audio stream manager hook
+  const handleScreenStreamChange = useCallback(
+    (stream: MediaStream | null, systemAudioTrack: MediaStreamTrack | null) => {
       if (stream) {
-        addLocalStream(stream);
+        const videoTrack = stream.getVideoTracks()[0] || null;
+        setRoleTrack('video', videoTrack, stream);
+        if (systemAudioTrack) {
+          setRoleTrack('systemAudio', systemAudioTrack, stream);
+        } else {
+          setRoleTrack('systemAudio', null);
+        }
         if (peerUserToken) {
           startNegotiation(peerUserToken);
         }
       } else {
-        removeLocalStream();
+        setRoleTrack('video', null);
+        setRoleTrack('systemAudio', null);
       }
     },
-    [addLocalStream, removeLocalStream, peerUserToken, startNegotiation],
+    [setRoleTrack, peerUserToken, startNegotiation],
   );
 
   const {
     isSharing,
     isSupported,
+    hasSystemAudio,
+    systemAudioVolume,
+    isSystemAudioMuted,
     localStream: screenStream,
     error: screenShareError,
     startShare,
     stopShare,
-  } = useScreenShare(handleStreamChange);
+    setSystemAudioVolume,
+    toggleSystemAudioMute,
+  } = useScreenShare(handleScreenStreamChange);
 
   const toggleScreenShare = () => {
     if (isSharing) {
@@ -140,6 +153,10 @@ export const RoomPage: React.FC = () => {
         isSharing={isSharing}
         isSupported={isSupported}
         isMicMuted={isMicMuted}
+        micVolume={micVolume}
+        isSystemAudioMuted={isSystemAudioMuted}
+        systemAudioVolume={systemAudioVolume}
+        hasSystemAudio={hasSystemAudio}
         isCameraOn={isCameraOn}
         audioInputs={audioInputs}
         videoInputs={videoInputs}
@@ -148,6 +165,9 @@ export const RoomPage: React.FC = () => {
         preset={preset}
         onToggleScreenShare={toggleScreenShare}
         onToggleMic={toggleMic}
+        onSetMicVolume={setMicVolume}
+        onToggleSystemAudioMute={toggleSystemAudioMute}
+        onSetSystemAudioVolume={setSystemAudioVolume}
         onToggleCamera={toggleCamera}
         onSwitchMic={switchMicrophone}
         onSwitchCamera={switchCamera}
