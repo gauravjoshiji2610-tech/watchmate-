@@ -2,13 +2,13 @@
   "name": "@antigravity/shared-types",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "description": "Pure TypeScript interfaces and type definitions. Zero runtime dependencies.",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs",
+      "default": "./dist/index.js",
       "types": "./dist/index.d.ts"
     }
   },

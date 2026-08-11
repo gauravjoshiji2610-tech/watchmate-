@@ -1,0 +1,123 @@
+# WatchMate — Production Docker Compose
+# Full stack: Backend, Frontend, Redis, Coturn TURN, Nginx Reverse Proxy
+#
+# Usage:
+#   cp .env.production.example .env.production
+#   docker compose --env-file .env.production up -d
+
+services:
+
+  # ─────────────────────────────────────────────
+  # Redis State Engine
+  # ─────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: watchmate-redis
+    restart: unless-stopped
+    volumes:
+      - redis-data:/data
+    networks:
+      - watchmate-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    command: redis-server --save 60 1 --loglevel warning
+
+  # ─────────────────────────────────────────────
+  # WatchMate Backend (Express + Socket.IO)
+  # ─────────────────────────────────────────────
+  server:
+    build:
+      context: .
+      dockerfile: apps/server/Dockerfile
+    container_name: watchmate-server
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      REDIS_URL: redis://redis:6379
+      CLIENT_URL: ${CLIENT_URL}
+      TURN_SECRET: ${TURN_SECRET}
+    networks:
+      - watchmate-net
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3001/api/health"]
+      interval: 15s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
+
+  # ─────────────────────────────────────────────
+  # WatchMate Frontend (Vite Build + Nginx Static)
+  # ─────────────────────────────────────────────
+  client:
+    build:
+      context: .
+      dockerfile: apps/client/Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL}
+        VITE_SOCKET_URL: ${VITE_SOCKET_URL}
+    container_name: watchmate-client
+    restart: unless-stopped
+    networks:
+      - watchmate-net
+
+  # ─────────────────────────────────────────────
+  # Coturn STUN/TURN Relay Server
+  # ─────────────────────────────────────────────
+  coturn:
+    image: coturn/coturn:latest
+    container_name: watchmate-coturn
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - ./coturn/turnserver.conf:/etc/coturn/turnserver.conf:ro
+      # Mount your TLS certs (obtained via Let's Encrypt / Certbot)
+      - /etc/letsencrypt/live/${DOMAIN}/fullchain.pem:/etc/ssl/certs/turn-server.pem:ro
+      - /etc/letsencrypt/live/${DOMAIN}/privkey.pem:/etc/ssl/private/turn-server-key.pem:ro
+      - coturn-logs:/var/log/turnserver
+    command: ["-c", "/etc/coturn/turnserver.conf"]
+
+  # ─────────────────────────────────────────────
+  # Nginx Reverse Proxy (Edge SSL Termination)
+  # ─────────────────────────────────────────────
+  nginx:
+    image: nginx:alpine
+    container_name: watchmate-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      server:
+        condition: service_healthy
+      client:
+        condition: service_started
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      # Mount your TLS certs
+      - /etc/letsencrypt/live/${DOMAIN}/fullchain.pem:/etc/ssl/certs/watchmate.pem:ro
+      - /etc/letsencrypt/live/${DOMAIN}/privkey.pem:/etc/ssl/private/watchmate-key.pem:ro
+    networks:
+      - watchmate-net
+
+# ─────────────────────────────────────────────
+# Volumes
+# ─────────────────────────────────────────────
+volumes:
+  redis-data:
+    driver: local
+  coturn-logs:
+    driver: local
+
+# ─────────────────────────────────────────────
+# Networks
+# ─────────────────────────────────────────────
+networks:
+  watchmate-net:
+    driver: bridge

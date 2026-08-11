@@ -1,5 +1,3 @@
-# Root tsconfig — references all packages for editor support (go-to-definition across packages)
-# Each package has its own tsconfig.json that extends tsconfig.base.json
 {
   "files": [],
   "references": [

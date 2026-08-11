@@ -1,0 +1,200 @@
+import { useState, useCallback, useRef, useEffect } from 'react';
+import { toast } from 'sonner';
+import type { EventEnvelope } from '@antigravity/shared-types';
+import type { SdpPayload, IceCandidatePayload } from '@antigravity/shared-schemas';
+import { PeerConnectionManager } from '../services/webrtc/PeerConnectionManager.js';
+import { SignalingService } from '../services/webrtc/SignalingService.js';
+import type { WebRTCConnectionState } from '../services/webrtc/ConnectionState.js';
+import type { WebRTCStatsReport } from '../services/webrtc/WebRTCStatsMonitor.js';
+import { getOrCreateUserToken } from '../services/roomService.js';
+import { logger } from '../lib/logger.js';
+
+export function useWebRTC(roomId?: string, isHost = false) {
+  const [connectionState, setConnectionState] = useState<WebRTCConnectionState>('new');
+  const [peerUserToken, setPeerUserToken] = useState<string | null>(null);
+  const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
+  const [stats, setStats] = useState<WebRTCStatsReport | null>(null);
+
+  const pcManagerRef = useRef<PeerConnectionManager | null>(null);
+  const signalingRef = useRef<SignalingService | null>(null);
+
+  const userToken = getOrCreateUserToken();
+
+  const disconnectWebRTC = useCallback(() => {
+    pcManagerRef.current?.close();
+    signalingRef.current?.disconnect();
+    pcManagerRef.current = null;
+    signalingRef.current = null;
+    setConnectionState('closed');
+    setPeerUserToken(null);
+    setRemoteStream(null);
+    setStats(null);
+    logger.info('WebRTC hook cleaned up');
+  }, []);
+
+  const addLocalStream = useCallback((stream: MediaStream) => {
+    if (pcManagerRef.current) {
+      pcManagerRef.current.addStream(stream);
+    }
+  }, []);
+
+  const removeLocalStream = useCallback(() => {
+    if (pcManagerRef.current) {
+      pcManagerRef.current.removeStream();
+    }
+  }, []);
+
+  const replaceLocalTrack = useCallback((kind: 'video' | 'audio', track: MediaStreamTrack | null) => {
+    if (pcManagerRef.current) {
+      pcManagerRef.current.replaceTrack(kind, track);
+    }
+  }, []);
+
+  const setRoleTrack = useCallback(
+    (role: 'video' | 'micAudio' | 'systemAudio', track: MediaStreamTrack | null, stream?: MediaStream) => {
+      if (pcManagerRef.current) {
+        pcManagerRef.current.setRoleTrack(role, track, stream);
+      }
+    },
+    [],
+  );
+
+  const triggerIceRestart = useCallback(async () => {
+    if (!pcManagerRef.current || !signalingRef.current || !peerUserToken) {
+      return;
+    }
+
+    try {
+      toast.warning('Network disconnect detected. Attempting WebRTC ICE restart...');
+      const offer = await pcManagerRef.current.restartIce();
+      signalingRef.current.sendOffer(peerUserToken, offer);
+    } catch (err) {
+      toast.error('WebRTC ICE restart failed');
+    }
+  }, [peerUserToken]);
+
+  const connectSignaling = useCallback(
+    (targetRoomId: string) => {
+      disconnectWebRTC();
+
+      const pcManager = new PeerConnectionManager();
+      const signaling = new SignalingService(userToken);
+
+      pcManagerRef.current = pcManager;
+      signalingRef.current = signaling;
+
+      pcManager.initialize({
+        onStateChange: (state) => {
+          setConnectionState(state);
+          if (state === 'connected') {
+            toast.success('P2P WebRTC Peer Connection Established!');
+          } else if (state === 'failed') {
+            toast.error('WebRTC Peer Connection Failed');
+          }
+        },
+        onIceCandidate: (candidate) => {
+          if (peerUserToken) {
+            signaling.sendIceCandidate(peerUserToken, candidate.toJSON());
+          }
+        },
+        onTrack: (stream) => {
+          setRemoteStream(stream);
+          toast.info('Received remote video stream');
+        },
+        onStats: (statsReport) => {
+          setStats(statsReport);
+        },
+        onIceRestartRequired: () => {
+          triggerIceRestart();
+        },
+      });
+
+      signaling.connect(targetRoomId, {
+        onOffer: async (envelope: EventEnvelope<SdpPayload>) => {
+          try {
+            setPeerUserToken(envelope.payload.producerId);
+            const rawSdp = envelope.payload.sdp;
+            const rtcOffer: RTCSessionDescriptionInit = rawSdp.sdp
+              ? { type: rawSdp.type, sdp: rawSdp.sdp }
+              : { type: rawSdp.type };
+
+            const answer = await pcManager.handleOffer(rtcOffer);
+            signaling.sendAnswer(envelope.payload.producerId, answer);
+          } catch (err) {
+            toast.error('Failed to handle incoming WebRTC offer');
+          }
+        },
+        onAnswer: async (envelope: EventEnvelope<SdpPayload>) => {
+          try {
+            const rawSdp = envelope.payload.sdp;
+            const rtcAnswer: RTCSessionDescriptionInit = rawSdp.sdp
+              ? { type: rawSdp.type, sdp: rawSdp.sdp }
+              : { type: rawSdp.type };
+
+            await pcManager.handleAnswer(rtcAnswer);
+          } catch (err) {
+            toast.error('Failed to process incoming WebRTC answer');
+          }
+        },
+        onIceCandidate: async (envelope: EventEnvelope<IceCandidatePayload>) => {
+          const rawCand = envelope.payload.candidate;
+          const candidateInit: RTCIceCandidateInit = {
+            candidate: rawCand.candidate,
+            sdpMid: rawCand.sdpMid ?? null,
+            sdpMLineIndex: rawCand.sdpMLineIndex ?? null,
+            usernameFragment: rawCand.usernameFragment ?? null,
+          };
+          await pcManager.addIceCandidate(candidateInit);
+        },
+        onError: (error) => {
+          toast.error(`Signaling Error: ${error.message}`);
+        },
+      });
+    },
+    [userToken, peerUserToken, disconnectWebRTC, triggerIceRestart],
+  );
+
+  const startNegotiation = useCallback(
+    async (targetUserToken: string) => {
+      if (!pcManagerRef.current || !signalingRef.current) {
+        toast.error('WebRTC not initialized');
+        return;
+      }
+
+      try {
+        setPeerUserToken(targetUserToken);
+        const offer = await pcManagerRef.current.createOffer();
+        signalingRef.current.sendOffer(targetUserToken, offer);
+        toast.info('Sending WebRTC P2P offer to peer...');
+      } catch (err) {
+        toast.error('Failed to create WebRTC offer');
+      }
+    },
+    [],
+  );
+
+  useEffect(() => {
+    if (roomId) {
+      connectSignaling(roomId);
+    }
+    return () => {
+      disconnectWebRTC();
+    };
+  }, [roomId, isHost, connectSignaling, disconnectWebRTC]);
+
+  return {
+    connectionState,
+    isConnected: connectionState === 'connected',
+    peerUserToken,
+    remoteStream,
+    stats,
+    addLocalStream,
+    removeLocalStream,
+    replaceLocalTrack,
+    setRoleTrack,
+    triggerIceRestart,
+    connectSignaling,
+    startNegotiation,
+    disconnectWebRTC,
+  };
+}

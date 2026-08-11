@@ -1,0 +1,10 @@
+# Force LF line endings for all text files in the repository.
+# This prevents Git on Windows from silently converting LF to CRLF.
+* text=auto eol=lf
+
+# Binary files — never mangle these
+*.png binary
+*.jpg binary
+*.ico binary
+*.woff2 binary
+*.ttf binary

@@ -3,15 +3,41 @@
   "version": "0.1.0",
   "private": true,
   "description": "AntiGravity frontend — React, Vite, TypeScript, TailwindCSS.",
+  "type": "module",
   "scripts": {
-    "build": "echo 'Not implemented yet — Phase 7'",
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
     "clean": "rimraf dist *.tsbuildinfo",
-    "typecheck": "echo 'Not implemented yet — Phase 7'",
-    "dev": "echo 'Not implemented yet — Phase 7'",
-    "test": "echo 'Not implemented yet'"
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@antigravity/shared-schemas": "workspace:*",
+    "@antigravity/shared-types": "workspace:*",
+    "@antigravity/shared-utils": "workspace:*",
+    "@hookform/resolvers": "^3.10.0",
+    "clsx": "^2.1.1",
+    "framer-motion": "^11.18.2",
+    "lucide-react": "^0.474.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-hook-form": "^7.54.2",
+    "react-router-dom": "^7.1.3",
+    "socket.io-client": "^4.8.1",
+    "sonner": "^1.7.3",
+    "tailwind-merge": "^3.0.1",
+    "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@types/node": "^22.10.10",
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "@vitejs/plugin-react": "^4.3.4",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.5.1",
     "rimraf": "^6.0.1",
-    "typescript": "^5.7.3"
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.7.3",
+    "vite": "^6.0.11"
   }
 }
