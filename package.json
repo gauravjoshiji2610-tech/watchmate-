@@ -4,8 +4,8 @@
   "private": true,
   "description": "WatchMate — Real-time Screen Sharing & Collaboration Platform powered by WebRTC",
   "engines": {
-    "node": ">=22.0.0",
-    "pnpm": ">=11.0.0"
+    "node": ">=20.0.0",
+    "pnpm": ">=10.0.0"
   },
   "scripts": {
     "build": "pnpm -r build",
