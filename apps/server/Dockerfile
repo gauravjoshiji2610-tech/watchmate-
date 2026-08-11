@@ -1,4 +1,4 @@
-# Multi-Stage Dockerfile for AntiGravity Server
+# Multi-Stage Dockerfile for WatchMate Server
 
 # Stage 1: Build Workspace Dependencies
 FROM node:20-alpine AS builder

@@ -1,4 +1,4 @@
-# Multi-Stage Dockerfile for AntiGravity Client
+# Multi-Stage Dockerfile for WatchMate Client
 
 # Stage 1: Build Vite Production Bundle
 FROM node:20-alpine AS builder
@@ -29,6 +29,9 @@ FROM nginx:alpine AS runner
 
 # Copy compiled static assets from Vite build
 COPY --from=builder /app/apps/client/dist /usr/share/nginx/html
+
+# Nginx config: serve index.html for all routes (React Router SPA fallback)
+RUN printf 'server {\n  listen 80;\n  root /usr/share/nginx/html;\n  index index.html;\n  location / {\n    try_files $uri $uri/ /index.html;\n  }\n}\n' > /etc/nginx/conf.d/default.conf
 
 # Expose HTTP port
 EXPOSE 80
