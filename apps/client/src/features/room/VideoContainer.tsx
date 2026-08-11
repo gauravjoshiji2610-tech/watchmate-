@@ -1,6 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import { Monitor, User, AlertTriangle, ShieldAlert, Activity } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
+import { logger } from '@/lib/logger';
 import type { WebRTCStatsReport } from '@/services/webrtc/WebRTCStatsMonitor';
 
 export interface VideoContainerProps {
@@ -26,10 +27,30 @@ export const VideoContainer: React.FC<VideoContainerProps> = ({
     const videoEl = videoRef.current;
     if (videoEl) {
       if (stream) {
-        videoEl.srcObject = stream;
-        videoEl.play().catch(() => {
-          // Auto-play policy handled via playsInline & muted for local
+        logger.info('[VideoContainer Diagnostic] Attaching stream to HTML video element', {
+          isLocal,
+          trackCount: stream.getTracks().length,
+          videoTracks: stream.getVideoTracks().length,
+          audioTracks: stream.getAudioTracks().length,
         });
+
+        videoEl.srcObject = stream;
+        videoEl.setAttribute('playsinline', 'true');
+        videoEl.setAttribute('webkit-playsinline', 'true');
+
+        const playPromise = videoEl.play();
+        if (playPromise !== undefined) {
+          playPromise.catch((err: unknown) => {
+            logger.warn('[VideoContainer Diagnostic] Video play() rejected by mobile browser autoplay policy', { err });
+            // For remote streams, if unmuted playback is blocked by mobile autoplay policy, fallback attempt
+            if (!isLocal) {
+              videoEl.muted = false;
+              videoEl.play().catch(() => {
+                /* user interaction will trigger playback */
+              });
+            }
+          });
+        }
       } else {
         videoEl.srcObject = null;
       }
@@ -39,7 +60,7 @@ export const VideoContainer: React.FC<VideoContainerProps> = ({
         videoEl.srcObject = null;
       }
     };
-  }, [stream]);
+  }, [stream, isLocal]);
 
   return (
     <div
